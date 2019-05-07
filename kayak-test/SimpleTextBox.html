@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html ng-app='kayak'>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Kayak Test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=0">
+
+    <!-- bootstrap 사용을 위하여 jquery를 포함함. m1textbox.min.js은 자체로 jquery를 포함하고 있음. -->
+    <script type='text/javascript' src='components/jquery/dist/jquery.js'></script>
+    <script type='text/javascript' src='components/angular/angular.js'></script>
+
+    <link rel="stylesheet" href="components/bootstrap/dist/css/bootstrap.min.css">
+    <script src="components/bootstrap/dist/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="./css/general.css">
+    <link rel="stylesheet" href="./css/SimpleTextBox.css">
+
+    <script src="./dist/m1textbox.min.js"></script>
+    <script src="./SimpleTextBox.js"></script>
+    <script src="./TestPassiveMode.js"></script>
+    <script src="./node_modules/diff/dist/diff.min.js"></script>
+
+</head>
+
+<body>
+    <div ng-controller='testCtrl'>
+        <div style='margin-bottom: 14px'>
+            <span style='font-size:24px'>Kayak Textbox Test</span>
+            <span class='btn btn-default btn-xs' ng-click='setup_textbox()'>Textbox</span>
+            <span class='btn btn-default btn-xs' ng-click='setup_textonpath()'>Text-on-Path</span>
+            <label>memorize selection
+                <input type="checkbox" ng-model="check_memorize_selection" ng-change="on_check_memorize_selection()">
+            </label>            
+        </div>
+
+        <div class='container'>
+            <div class='row'>
+                <div class="col-md-10 kayak-toolbar">
+                    <div style='display:inline-block; vertical-align:middle'>
+                        <div class="input-group" style='width:140px;'>
+                            <input ng-model='style.font_family_name' type="text" class="form-control input-xs" readonly>
+                            <div class="input-group-btn btn-group-xs">
+                                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-expanded="false">&nbsp;<span class="caret"></span></button>
+                                <ul class="dropdown-menu dropdown-menu-right" role="menu" style='min-width:120px; font-size:11px'>
+                                    <li ng-repeat="val in font_family_name_list" ng-click='on_set_font_family_name(val.name)'><a href='#'>{{val.disp_name}}</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div style='display:inline-block; vertical-align:middle'>
+                        <div class="input-group" style='width:80px;'>
+                            <input ng-model='style.type_style_name' type="text" class="form-control input-xs" readonly>
+                            <div class="input-group-btn btn-group-xs">
+                                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-expanded="false">&nbsp;<span class="caret"></span></button>
+                                <ul class="dropdown-menu dropdown-menu-right" role="menu" style='min-width:120px; font-size:11px'>
+                                    <li ng-repeat="val in type_style_name_list" ng-click='on_set_type_style_name(val.name)'><a href='#'>{{val.disp_name}}</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style='display:inline-block; vertical-align:middle'>
+                        <div class="input-group" style='width:60px;'>
+                            <input ng-model='style.font_size' min='6' max='99' type="text" class="form-control input-xs" ng-change='on_set_fsize()'>
+                            <div class="input-group-btn btn-group-xs">
+                                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-expanded="false">&nbsp;<span class="caret"></span></button>
+                                <ul class="dropdown-menu dropdown-menu-right" role="menu" style='min-width:40px; font-size:11px'>
+                                    <li ng-repeat="val in font_size_list" ng-click='on_set_fsize(val.value)'><a href='#'>{{val.name}}</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <span>(pt) </span>
+                    <span class='btn btn-default btn-xs' ng-class="{'active' : style.bold}" ng-click='on_set_bold()'>bold</span>
+                    <select ng-model='style.align' ng-change="on_set_align()">
+                        <option value='left'>left</option>
+                        <option value='center'>center</option>
+                        <option value='right'>right</option>
+                        <option value='left-justified'>left-justified</option>
+                        <option value='center-justified'>center-justified</option>
+                        <option value='right-justified'>right-justified</option>
+                        <option value='fully-justified'>fully-justified</option>
+                    </select>
+
+                    <span>&nbsp; | &nbsp;</span>
+                    <span class='btn btn-default btn-xs' ng-class="{'active' : style.fit_to_content_height}" ng-click='on_toggle_fit_to_content_height()'>fit</span>
+                    <select ng-model='style.vertical_justification' ng-change="on_set_vertical_justification()">
+                        <option value='top'>top</option>
+                        <option value='center'>center</option>
+                        <option value='bottom'>bottom</option>
+                    </select>
+                    <span>&nbsp; | &nbsp;</span>
+                    <select ng-model='style.first_line_baseline_offset' ng-change="on_set_first_line_baseline_offset_mode()">
+                        <option value='ascent'>ascent</option>
+                        <option value='embox'>embox</option>
+                    </select>
+
+
+
+                </div>
+
+                <div class="col-md-10 pane-right">
+                    <span class='btn btn-default btn-xs' ng-click='resizeBox(-10)'>resizeBox -10</span>
+                    <span class='btn btn-default btn-xs' ng-click='resizeBox(10)'>resizeBox +10</span>
+                    <span class='btn btn-default btn-xs' ng-click='on_get_dimension()'>get_dimension()</span>
+                    <span>&nbsp; | &nbsp;</span>
+                    <span class='btn btn-default btn-xs' ng-class="{'active' : inspector.show_outline}" ng-click='on_toggle_outline()'>outline</span>
+                    <span class='btn btn-default btn-xs' ng-class="{'active' : inspector.line_staining}" ng-click='on_toggle_line_staining()'>line staining</span>
+                    <span class='btn btn-default btn-xs' ng-class="{'active' : inspector.show_metric_box}" ng-click='on_toggle_metric_box()'>metric box</span>
+                    <span>&nbsp; | &nbsp;</span>
+                    <span class='btn btn-default btn-xs' ng-click='attach_tb()'>attach tb</span>
+                    <span class='btn btn-default btn-xs' ng-click='detach_tb()'>detach tb</span>
+                </div>
+                
+                <div class="col-md-10 pane-right">
+                        <span>F-indent</span> : <input type='number' min='-50' max='50' class='form-control inline-form input-xs' style='width:50px' ng-model='style.findent' ng-change='on_set_findent()'>
+                        <span>L-indent</span> : <input type='number' min='0' class='form-control inline-form input-xs' style='width:50px' ng-model='style.lindent' ng-change='on_set_lindent()'>
+                        <span>R-indent</span> : <input type='number' min='0' class='form-control inline-form input-xs' style='width:50px' ng-model='style.rindent' ng-change='on_set_rindent()'>
+
+                        <span>S-Before</span> : <input type='number' min='0' max='50' class='form-control inline-form input-xs' style='width:50px' ng-model='style.space_before' ng-change='on_set_space_before()'>
+                        <span>S-After</span> : <input type='number' min='0' max='50' class='form-control inline-form input-xs' style='width:50px' ng-model='style.space_after' ng-change='on_set_space_after()'>
+                        <span>L-Space</span> : <input type='number' min='0' max='50' class='form-control inline-form input-xs' style='width:50px' ng-model='style.line_space' ng-change='on_set_line_space()'>
+                        <span>Leading</span> : <input class='form-control inline-form input-xs' style='width:50px' ng-model='style.leading' ng-keyup='$event.keyCode == 13 && on_set_leading()'>
+                </div>
+                <div class="col-md-10 pane-right">
+                    <p class='form-inline'>
+                        <span>LetterSpace</span> : <input type='number' min='-2000' max='2000' class='form-control inline-form input-xs' style='width:50px' ng-model='style.letter_space' my-enter='on_set_letter_space()'>(em/1000)
+                        <span>&nbsp; | &nbsp;</span>
+                        <span>LetterScaleX</span> : <input type='number' min='10' max='500' class='form-control inline-form input-xs' style='width:50px' ng-model='style.letter_scale_x' my-enter='on_set_letter_scale_x()'>(%)
+                    </p>
+                    <p class='form-inline'>
+                        <span class='btn btn-default btn-xs' ng-click='on_set_font_color("black", [0, 0, 0, 100])'>black</span>
+                        <span class='btn btn-default btn-xs' ng-click='on_set_font_color("gray", [0, 0, 0, 60])'>gray</span>
+                        <span class='btn btn-default btn-xs' ng-click='on_set_font_color("white", [0, 0, 0, 0])'>white</span>
+                        <span class='btn btn-default btn-xs' ng-click='on_set_font_color("red", [0, 100, 100, 0])'>red</span>
+                        <span class='btn btn-default btn-xs' ng-click='on_set_font_color("green", [100, 0, 100, 0])'>green</span>
+                        <span class='btn btn-default btn-xs' ng-click='on_set_font_color("blue", [100, 100, 0, 0])'>blue</span>
+                        <span class='btn btn-default btn-xs' ng-click='on_insert_str()'>insert string</span>                        
+                        <span class='btn btn-default btn-xs' ng-click='on_select_all()'>select all</span>                        
+                    </p>
+
+                    <div class='out-area' ng-click='on_set_blur($event)'>
+                        set_blur() --> ST_NONE
+                    </div>
+                    <div class='out-area' ng-click='on_set_select($event)'>
+                        set_select()
+                    </div>
+
+                    <div style='padding-top:15px'></div>
+                    <div ng-mousedown='mousedown($event)' ng-mousemove='mousemove($event)' ng-mouseup='mouseup($event)'>
+                        <div>
+                            <!-- textbox_one과 svg_snapshot을 나란히 배치히가 위함 -->
+                            <div id='textbox_one' class='kayak-page' style='float:left'></div>
+                            <div ng-if='inspector.show_svg_snapshot' class='svg-snapshot-container'>
+                                <div style='position:absolute; top:-25px; width:300px; margin-left:16px;'>
+                                    svg snapshot
+                                    <label style='margin-left: 30px'>color override
+                                        <input type="checkbox" ng-model="check_svg_color_override" ng-change="on_check_svg_color_override()">
+                                    </label>
+                                </div>
+                                <div class='svg-box'>
+                                    <div id='svg-one' ></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div style='clear:both'></div>
+
+                        <div class='height-resize' ng-mousedown='height_resizer_mousedown($event)'></div>
+                    </div>
+                    <div style='margin-top:20px'>
+                        Render Mode : 
+                            <span class='btn btn-default btn-xs' ng-class="{'active' : style.legacy_181028}" ng-click='on_toggle_legacy_181028()'>legacy mode</span>
+                    </div>
+                    <div>
+                        Fit width to first paragraph : 
+                        <button type="button" class="btn btn-default btn-xs" ng-click='on_fit_width_to_first_paragraph()'>do it</button>
+                    </div>
+
+                    inspect content : 
+                        <span class='btn btn-default btn-xs' ng-class="{'active' : inspector.show_mirror_content}" ng-click='on_toggle_mirror_content()'>show mirror content</span>
+                        <span class='btn btn-default btn-xs' ng-class="{'active' : inspector.show_svg_snapshot}" ng-click='on_toggle_svg_snapshot()'>show svg snapshot</span>
+
+
+                    <!--<span class='btn btn-default btn-xs' ng-click='show_mirror()'>call mirror()</span>-->
+                    <div id='mirror-one' ng-if='inspector.show_mirror_content'>
+                    </div>
+
+
+                    <hr>
+                        <div style='display:flex; flex-direction:row'>
+                            <div style='flex: 1 1 40%'>
+                                <div>Text On Path</div>
+                                <!--<div id='svg-container' class='bezier-box'></div> -->
+                                <select ng-model="align_to_path" ng-options="opt for opt in align_to_path_options"  ng-change='on_change_align_to_path()' >
+                                </select>
+                                <label name='label_flip_path'>
+                                    flip path <input type='checkbox' ng-model="flip_path" ng-change='on_change_flip_path()'>
+                                </label>
+                                </label>
+                                <button type="button" class="btn btn-default btn-xs" ng-click='on_resize_path_bbox()'>resize path bbox</button>
+                                <div class='bezier-box' style='display:none'>
+                                    <canvas id="textonpath" width="700" height="350"></canvas>
+                                </div> 
+                            </div>
+                            <div style='flex: 1 1 60%; border-left: 1px solid lightgray; padding-left: 10px'>
+                                <div>
+                                    Passive Mode
+                                    <input type="checkbox" ng-model="check_passive_mode" ng-change="on_check_passive_mode()">
+                                </div>
+                                <textarea style='width:100%' ng-model="passive_text" ng-change='on_textarea_changed()'>
+
+                                </textarea>
+                            </div>
+                        </div>                            
+                    <hr>
+                    <div id='textbox_two' class='kayak-page'></div>
+
+                    <span class='btn btn-default btn-xs' ng-click='loadFromJson()'>loadFromJson</span>
+                    <span class='btn btn-default btn-xs' ng-click='saveAsJson()'>SaveAsJson</span>
+                    <span class='btn btn-default btn-xs' ng-click='showJson()'>showJson(inspector)</span>
+                    
+                    <span class='btn btn-default btn-xs' ng-click='showUsedFonts()'>show used fonts</span>
+                    <span class='btn btn-default btn-xs' ng-click='showUsedColors()'>show used colors</span>
+                    <br>
+                    
+                    <div style='margin-top:30px'>
+                        <span class='btn btn-default btn-xs' ng-click='import_kayak_json()'>import Kayak Json</span>
+                        <br>                        
+                        <textarea ng-model='kayak_json_text' rows="2" cols="50"></textarea>                        
+                    </div>
+
+
+                    <div style='display:flex; flex-direction:row; margin-top:30px'>
+                        <div style='flex: 1 1 40%'>
+                            <span class='btn btn-default btn-xs' ng-click='import_indesign_json()'>import InDesign Json</span>
+                            &nbsp;&nbsp;//&nbsp;&nbsp;&nbsp;
+                            <span class='btn btn-default btn-xs' ng-click='load_indesign_josn_from_LocalStorage()'>load (L'Storage)</span>
+                            <span class='btn btn-default btn-xs' ng-click='save_indesign_josn_to_LocalStorage()'>save (L'Storage)</span>
+                            <br>
+                            <textarea ng-model='indesign_json_text' rows="2" cols="50"></textarea>
+                        </div>
+                        <div style='flex: 1 1 60%; border-left: 1px solid lightgray; padding-left: 10px'>
+                            font-list
+                            <input type="checkbox" ng-model="check_fontlist_mode" ng-change="on_check_fontlist_mode()">
+                            &nbsp;&nbsp;//&nbsp;&nbsp;&nbsp;
+                            <span class='btn btn-default btn-xs' ng-click='load_fontlist_josn_from_LocalStorage()'>load (L'Storage)</span>
+                            <span class='btn btn-default btn-xs' ng-click='save_fontlist_josn_to_LocalStorage()'>save (L'Storage)</span>
+                            <br>
+                            <textarea style='width:100%' ng-model="fontlist_text">
+                            </textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class='col-md-10 panel-right'>
+                    <hr>
+                    <span class='btn btn-default btn-xs' ng-click='toggle_show_table()'>toggle show/hide</span>                    
+                    <!-- information display -->
+                    <table id='debug_table' class='table table-condensed table-bordered bill_table'>
+                        <thead style='background-color:#f0f0f0'>
+                            <tr>
+                                <th style="width:120px">key</th>
+                                <th>val</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>sel state</td>
+                                <td>{{ctx.component_selection_state}}</td>
+                            </tr>
+                            <tr>
+                                <td>cmd step</td>
+                                <td>{{ctx.cmd_step}}</td>
+                            </tr>
+                            <tr>
+                                <td>cursor pos</td>
+                                <td>{{ctx.cursor_pos}}</td>
+                            </tr>
+                            <tr>
+                                <td>selection</td>
+                                <td> {{ctx.sel_range}}</td>
+                            </tr>
+                            <tr>
+                                <td>word-cache</td>
+                                <td> {{ctx.word_cache_size}}</td>
+                            </tr>
+                            <tr>
+                                <td>seglayer par</td>
+                                <td> {{ctx.seg_vec}}</td>
+                            </tr>
+                            <tr>
+                                <td>seglayer fsize</td>
+                                <td> {{ctx.seg_fsize}}</td>
+                            </tr>
+                            <tr>
+                                <td>seglayer bold</td>
+                                <td> {{ctx.seg_bold}}</td>
+                            </tr>
+                            <tr>
+                                <td>seglayer fColor</td>
+                                <td> {{ctx.seg_fontColor}}</td>
+                            </tr>
+                            <tr>
+                                <td>text core</td>
+                                <td> {{ctx.text_core}}</td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <hr>
+    <div style='text-align:center; margin-bottom: 20px'>
+        Kayak is text engine for Edicus publisher. All right reserved. MotionOne Inc. 2019.
+    </div>
+</body>
+
+</html>
